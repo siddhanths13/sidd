@@ -1,470 +1,73 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building Jumper Rescue</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            color: white;
-        }
-        
-        #game-container {
-            width: 800px;
-            max-width: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
-        }
-        
-        h1 {
-            color: #ffcc00;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        
-        #score {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #4cd137;
-        }
-        
-        #game-canvas {
-            background: linear-gradient(to bottom, #8bc34a, #4caf50);
-            border: 3px solid #2c3e50;
-            border-radius: 10px;
-            margin: 0 auto;
-            display: block;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        #controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        #place-block {
-            background: linear-gradient(to bottom, #3498db, #2980b9);
-            color: white;
-        }
-        
-        #place-water {
-            background: linear-gradient(to bottom, #00b4db, #0083b0);
-            color: white;
-        }
-        
-        #place-trampoline {
-            background: linear-gradient(to bottom, #e74c3c, #c0392b);
-            color: white;
-        }
-        
-        #start-btn {
-            background: linear-gradient(to bottom, #2ecc71, #27ae60);
-            color: white;
-            padding: 15px 30px;
-            font-size: 18px;
-        }
-        
-        #instructions {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-        }
-        
-        #instructions h2 {
-            color: #ffcc00;
-            margin-bottom: 10px;
-        }
-        
-        #message {
-            font-size: 20px;
-            margin: 15px 0;
-            height: 30px;
-            color: #f1c40f;
-            font-weight: bold;
-        }
-        
-        .item-count {
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 3px 10px;
-            border-radius: 20px;
-            margin-left: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Auto-Moving Player Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #222;
+      border: 2px solid #555;
+    }
+    h1 {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>Building Jumper Rescue</h1>
-        <div id="score">Saved: 0 | Failed: 0</div>
-        
-        <canvas id="game-canvas" width="700" height="500"></canvas>
-        
-        <div id="message"></div>
-        
-        <div id="controls">
-            <button id="place-block">Place Block (B) <span class="item-count" id="block-count">3</span></button>
-            <button id="place-water">Place Water (W) <span class="item-count" id="water-count">2</span></button>
-            <button id="place-trampoline">Place Trampoline (T) <span class="item-count" id="trampoline-count">1</span></button>
-            <button id="start-btn">Start Game</button>
-        </div>
-        
-        <div id="instructions">
-            <h2>How to Play:</h2>
-            <p>An NPC will jump from the building. Your goal is to save them by placing rescue items in their path.</p>
-            <p>• Blocks will stop the NPC but may cause injury if placed too high</p>
-            <p>• Water will safely catch the NPC but disappears after use</p>
-            <p>• Trampolines will bounce the NPC to safety but are single-use</p>
-            <p>Press the buttons or use keyboard shortcuts (B, W, T) to place items.</p>
-        </div>
-    </div>
+  <h1>Auto-Player Game (You Just Watch)</h1>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('game-canvas');
-            const ctx = canvas.getContext('2d');
-            const startBtn = document.getElementById('start-btn');
-            const placeBlockBtn = document.getElementById('place-block');
-            const placeWaterBtn = document.getElementById('place-water');
-            const placeTrampolineBtn = document.getElementById('place-trampoline');
-            const scoreDisplay = document.getElementById('score');
-            const messageDisplay = document.getElementById('message');
-            const blockCountSpan = document.getElementById('block-count');
-            const waterCountSpan = document.getElementById('water-count');
-            const trampolineCountSpan = document.getElementById('trampoline-count');
-            
-            // Game state
-            let gameRunning = false;
-            let savedCount = 0;
-            let failedCount = 0;
-            let blocks = [];
-            let waters = [];
-            let trampolines = [];
-            let npc = null;
-            let itemCounts = {
-                block: 3,
-                water: 2,
-                trampoline: 1
-            };
-            let gameInterval;
-            
-            // Building properties
-            const building = {
-                x: 50,
-                y: 100,
-                width: 80,
-                height: 350,
-                windows: []
-            };
-            
-            // Generate windows for the building
-            for (let i = 0; i < 5; i++) {
-                for (let j = 0; j < 3; j++) {
-                    building.windows.push({
-                        x: building.x + 15 + j * 25,
-                        y: building.y + 20 + i * 60,
-                        width: 15,
-                        height: 20,
-                        lightOn: Math.random() > 0.5
-                    });
-                }
-            }
-            
-            // Draw the building
-            function drawBuilding() {
-                // Building structure
-                ctx.fillStyle = '#34495e';
-                ctx.fillRect(building.x, building.y, building.width, building.height);
-                
-                // Building outline
-                ctx.strokeStyle = '#2c3e50';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(building.x, building.y, building.width, building.height);
-                
-                // Draw windows
-                building.windows.forEach(window => {
-                    ctx.fillStyle = window.lightOn ? '#f1c40f' : '#2c3e50';
-                    ctx.fillRect(window.x, window.y, window.width, window.height);
-                    
-                    ctx.strokeStyle = '#2c3e50';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(window.x, window.y, window.width, window.height);
-                });
-                
-                // Roof
-                ctx.fillStyle = '#7f8c8d';
-                ctx.beginPath();
-                ctx.moveTo(building.x - 10, building.y);
-                ctx.lineTo(building.x + building.width + 10, building.y);
-                ctx.lineTo(building.x + building.width / 2, building.y - 30);
-                ctx.closePath();
-                ctx.fill();
-            }
-            
-            // Draw rescue items
-            function drawItems() {
-                // Draw blocks
-                blocks.forEach(block => {
-                    ctx.fillStyle = '#8c7b6b';
-                    ctx.fillRect(block.x, block.y, block.width, block.height);
-                    
-                    ctx.strokeStyle = '#6d5747';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(block.x, block.y, block.width, block.height);
-                    
-                    // Brick pattern
-                    ctx.strokeStyle = '#6d5747';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(block.x, block.y + block.height/2);
-                    ctx.lineTo(block.x + block.width, block.y + block.height/2);
-                    ctx.stroke();
-                    
-                    for (let i = 1; i < 4; i++) {
-                        ctx.beginPath();
-                        ctx.moveTo(block.x + i * block.width/4, block.y);
-                        ctx.lineTo(block.x + i * block.width/4, block.y + block.height);
-                        ctx.stroke();
-                    }
-                });
-                
-                // Draw water
-                waters.forEach(water => {
-                    ctx.fillStyle = 'rgba(52, 152, 219, 0.6)';
-                    ctx.fillRect(water.x, water.y, water.width, water.height);
-                    
-                    ctx.strokeStyle = '#2980b9';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(water.x, water.y, water.width, water.height);
-                    
-                    // Water waves
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    for (let i = 0; i < water.width; i += 15) {
-                        ctx.moveTo(water.x + i, water.y + 5);
-                        ctx.lineTo(water.x + i + 10, water.y + water.height - 5);
-                    }
-                    ctx.stroke();
-                });
-                
-                // Draw trampolines
-                trampolines.forEach(trampoline => {
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.beginPath();
-                    ctx.ellipse(trampoline.x + trampoline.width/2, trampoline.y + trampoline.height/2, 
-                                trampoline.width/2, trampoline.height/2, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.strokeStyle = '#c0392b';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    
-                    // Trampoline springs
-                    ctx.strokeStyle = '#f39c12';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(trampoline.x, trampoline.y + trampoline.height/2);
-                    ctx.lineTo(trampoline.x - 10, trampoline.y + trampoline.height + 5);
-                    ctx.moveTo(trampoline.x + trampoline.width, trampoline.y + trampoline.height/2);
-                    ctx.lineTo(trampoline.x + trampoline.width + 10, trampoline.y + trampoline.height + 5);
-                    ctx.stroke();
-                    
-                    // Trampoline lines
-                    ctx.strokeStyle = '#ecf0f1';
-                    ctx.lineWidth = 1;
-                    for (let i = 0; i < 5; i++) {
-                        ctx.beginPath();
-                        ctx.ellipse(trampoline.x + trampoline.width/2, trampoline.y + trampoline.height/2, 
-                                    trampoline.width/2 - i*3, trampoline.height/2 - i*2, 0, 0, Math.PI * 2);
-                        ctx.stroke();
-                    }
-                });
-            }
-            
-            // NPC class
-            class NPC {
-                constructor() {
-                    this.width = 20;
-                    this.height = 30;
-                    this.x = building.x + building.width/2 - this.width/2;
-                    this.y = building.y - this.height;
-                    this.speedY = 0;
-                    this.speedX = (Math.random() - 0.5) * 2;
-                    this.gravity = 0.3;
-                    this.saved = false;
-                    this.failed = false;
-                    this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
-                }
-                
-                update() {
-                    // Apply gravity
-                    this.speedY += this.gravity;
-                    this.y += this.speedY;
-                    this.x += this.speedX;
-                    
-                    // Check if NPC is saved by water
-                    for (let i = 0; i < waters.length; i++) {
-                        const water = waters[i];
-                        if (this.x < water.x + water.width &&
-                            this.x + this.width > water.x &&
-                            this.y + this.height > water.y &&
-                            this.y < water.y + water.height) {
-                            this.saved = true;
-                            this.speedY = 0;
-                            this.y = water.y - this.height + 5;
-                            waters.splice(i, 1); // Remove water after use
-                            break;
-                        }
-                    }
-                    
-                    // Check if NPC hits a block
-                    for (let i = 0; i < blocks.length; i++) {
-                        const block = blocks[i];
-                        if (this.x < block.x + block.width &&
-                            this.x + this.width > block.x &&
-                            this.y + this.height > block.y &&
-                            this.y < block.y + block.height) {
-                            
-                            // If falling too fast, NPC fails
-                            if (this.speedY > 5) {
-                                this.failed = true;
-                            } else {
-                                this.saved = true;
-                                this.speedY = 0;
-                                this.y = block.y - this.height;
-                            }
-                            break;
-                        }
-                    }
-                    
-                    // Check if NPC hits a trampoline
-                    for (let i = 0; i < trampolines.length; i++) {
-                        const trampoline = trampolines[i];
-                        const centerX = trampoline.x + trampoline.width/2;
-                        const centerY = trampoline.y + trampoline.height/2;
-                        const distanceX = (this.x + this.width/2) - centerX;
-                        const distanceY = (this.y + this.height) - centerY;
-                        
-                        // Simple ellipse collision detection
-                        if ((distanceX * distanceX) / ((trampoline.width/2) * (trampoline.width/2)) + 
-                            (distanceY * distanceY) / ((trampoline.height/2) * (trampoline.height/2)) <= 1) {
-                            this.speedY = -10; // Bounce high
-                            trampolines.splice(i, 1); // Remove trampoline after use
-                            break;
-                        }
-                    }
-                    
-                    // Check if NPC is out of bounds or saved
-                    if (this.y > canvas.height) {
-                        this.failed = true;
-                    }
-                    
-                    if (this.y + this.height < 0) {
-                        this.saved = true;
-                    }
-                }
-                
-                draw() {
-                    // Draw NPC body
-                    ctx.fillStyle = this.color;
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                    
-                    // Draw NPC face
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(this.x + 5, this.y + 8, 3, 3); // Left eye
-                    ctx.fillRect(this.x + this.width - 8, this.y + 8, 3, 3); // Right eye
-                    
-                    // Draw mouth based on state
-                    if (this.saved) {
-                        // Smile
-                        ctx.beginPath();
-                        ctx.arc(this.x + this.width/2, this.y + 20, 5, 0, Math.PI);
-                        ctx.stroke();
-                    } else if (this.failed) {
-                        // Frown
-                        ctx.beginPath();
-                        ctx.arc(this.x + this.width/2, this.y + 23, 5, Math.PI, 0, true);
-                        ctx.stroke();
-                    } else {
-                        // Straight mouth (scared)
-                        ctx.beginPath();
-                        ctx.moveTo(this.x + 5, this.y + 22);
-                        ctx.lineTo(this.x + this.width - 5, this.y + 22);
-                        ctx.stroke();
-                    }
-                    
-                    // Draw arms and legs
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    
-                    // Arms
-                    ctx.moveTo(this.x, this.y + 10);
-                    ctx.lineTo(this.x - 8, this.y + 15);
-                    
-                    ctx.moveTo(this.x + this.width, this.y + 10);
-                    ctx.lineTo(this.x + this.width + 8, this.y + 15);
-                    
-                    // Legs
-                    ctx.moveTo(this.x + 5, this.y + this.height);
-                    ctx.lineTo(this.x, this.y + this.height + 10);
-                    
-                    ctx.moveTo(this.x + this.width - 5, this.y + this.height);
-                    ctx.lineTo(this.x + this.width, this.y + this.height + 10);
-                    
-                    ctx.stroke();
-                }
-            }
-            
-            // Game functions
-            function startGame() {
-                if (!gameRunning) {
-                    gameRunning = true;
-                    savedCount = 0;
-                    failedCount = 0;
-                    blocks = [];
-                    waters = [];
-                    trampolines = [];
-                    itemCounts = {
-                        block: 3,
-                        water: 2,
-                        trampoline: 1
-                    };
-                    updateItemCounts();
-                    messageDisplay.text
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // The "main player" (AI-controlled)
+    const player = {
+      x: 50,
+      y: 50,
+      size: 20,
+      color: 'lime',
+      dx: 2,
+      dy: 2
+    };
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.size, player.size);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawPlayer();
+
+      // Move the player
+      player.x += player.dx;
+      player.y += player.dy;
+
+      // Bounce off walls
+      if (player.x + player.size > canvas.width || player.x < 0) {
+        player.dx *= -1;
+      }
+      if (player.y + player.size > canvas.height || player.y < 0) {
+        player.dy *= -1;
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
+</html>
